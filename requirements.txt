@@ -1,0 +1,5 @@
+Flask==3.0.3
+watchdog==4.0.0
+selenium==4.20.0
+rich==13.7.1
+markdown-it-py==3.0.0
