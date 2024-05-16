@@ -31,8 +31,11 @@ def fetch_data(driver, url):
 
     for match in matches:
         try:
-            match_date = match.find_element(By.CLASS_NAME, 'ft').text
+            
             match_time = match.find_element(By.ID, match.get_attribute('id') + '__status-or-time').text
+            if "'" not in match_time:
+                match_date = match.find_element(By.CLASS_NAME, 'ft').text
+
             home_team = match.find_element(By.ID, match.get_attribute('id') + '__home-team-name').text
             away_team = match.find_element(By.ID, match.get_attribute('id') + '__away-team-name').text
             home_score_element = match.find_element(By.ID, match.get_attribute('id') + '__home-team-score')
@@ -52,7 +55,7 @@ def fetch_data(driver, url):
             elif "'" in match_time:
                 match_info['status'] = 'Live'
                 match_info['time'] = match_time
-                match_info['score'] = f"{home_team} {home_score} - {away_team} {away_score}"
+                match_info['score'] = f"{home_score} - {away_score}"
             elif 'HT' in match_time:
                 match_info['status'] = 'Halftime'
                 match_info['score'] = f"{home_team} {home_score} - {away_team} {away_score}"
