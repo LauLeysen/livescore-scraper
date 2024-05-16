@@ -14,9 +14,7 @@ def get_driver():
     options = Options()
     options.add_argument('--no-sandbox')
     options.add_argument('--headless')
-    options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--log-level=3')
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
 
     try:
         return webdriver.Chrome(options=options)
@@ -28,43 +26,39 @@ def fetch_data(driver, url):
     driver.get(url)
     time.sleep(3)  # Allow time for the page to load
 
-    matches = driver.find_elements(By.CLASS_NAME, 'xo')
+    matches = driver.find_elements(By.CLASS_NAME, 'wo')
     match_data = []
 
     for match in matches:
         try:
-            match_status_time = match.find_element(By.CLASS_NAME, 'Zs').text
-            time_status_element = match.find_element(By.CLASS_NAME, 'Ys').text.replace('\n', ' ')
-            home_team = match.find_element(By.XPATH, ".//div[@class='Fo']/div[@class='Ho']").text
-            away_team = match.find_element(By.XPATH, ".//div[@class='Go']/div[@class='Ho']").text
+            match_date = match.find_element(By.CLASS_NAME, 'ft').text
+            match_time = match.find_element(By.ID, match.get_attribute('id') + '__status-or-time').text
+            home_team = match.find_element(By.ID, match.get_attribute('id') + '__home-team-name').text
+            away_team = match.find_element(By.ID, match.get_attribute('id') + '__away-team-name').text
+            home_score_element = match.find_element(By.ID, match.get_attribute('id') + '__home-team-score')
+            away_score_element = match.find_element(By.ID, match.get_attribute('id') + '__away-team-score')
+            
+            home_score = home_score_element.text if home_score_element.text else None
+            away_score = away_score_element.text if away_score_element.text else None
             
             match_info = {
                 'home_team': home_team,
                 'away_team': away_team
             }
             
-            if 'FT' in time_status_element:
-                home_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='Mo']").text
-                away_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='No']").text
+            if match_time == 'FT':
                 match_info['status'] = 'Finished'
                 match_info['result'] = f"{home_team} {home_score} - {away_score} {away_team}"
-            
-            elif 'HT' in match_status_time:
-                home_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='Mo']").text
-                away_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='No']").text
-                match_info['status'] = 'Halftime'
-                match_info['score'] = f"{home_score} - {away_score}"
-            
-            elif "'" in time_status_element:
-                home_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='Mo']").text
-                away_score = match.find_element(By.XPATH, ".//div[@class='Lo']/div[@class='No']").text
+            elif "'" in match_time:
                 match_info['status'] = 'Live'
-                match_info['time'] = match_status_time
-                match_info['score'] = f"{home_score} - {away_score}"
-            
+                match_info['time'] = match_time
+                match_info['score'] = f"{home_team} {home_score} - {away_team} {away_score}"
+            elif 'HT' in match_time:
+                match_info['status'] = 'Halftime'
+                match_info['score'] = f"{home_team} {home_score} - {away_team} {away_score}"
             else:
-                match_info['status'] = f'Upcoming {time_status_element}'
-                match_info['start_time'] = time_status_element
+                match_info['status'] = f'Upcoming {match_date} {match_time}'
+                match_info['start_time'] = match_time
             
             match_data.append(match_info)
         except Exception as e:
