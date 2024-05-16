@@ -10,6 +10,10 @@ This project is a soccer match data scraper that uses Selenium to fetch live mat
 - Handles different match statuses such as Finished, Halftime, Live, and Upcoming.
 - For a flask api for this project check this out! https://github.com/MrSopia/football-api/tree/main
 
+## To do
+- More testing
+- More detailed sccraping of life stats shots/corners etc
+
 ## Requirements
 - Python 3.11.4 (tested)
 - Selenium
