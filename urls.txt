@@ -1,6 +1,8 @@
 https://www.livescore.com/en/football/england/premier-league/
 https://www.livescore.com/en/football/spain/laliga/
-https://www.livescore.com/en/football/italy/coppa-italia-final/
 https://www.livescore.com/en/football/france/ligue-1/
 https://www.livescore.com/en/football/england/championship-play-off/
 https://www.livescore.com/en/football/germany/bundesliga/
+https://www.livescore.com/en/football/italy/serie-a/
+https://www.livescore.com/en/football/turkiye/super-lig/
+https://www.livescore.com/en/football/portugal/primeira-liga/

@@ -3,9 +3,11 @@ import json
 import asyncio
 from rich import print
 from selenium import webdriver
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, TimeoutException, NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 def get_driver():
     """
@@ -31,16 +33,21 @@ def fetch_data(driver, url):
 
     for match in matches:
         try:
+            try:
+                # Wait until at least one match time element is present
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, 'et.ft'))
+                )
+            except TimeoutException:
+                print(f"[bold red]Timeout while waiting for page to load:[/bold red] {url}")
+                return []
             
             match_time = match.find_element(By.ID, match.get_attribute('id') + '__status-or-time').text
-            if "'" not in match_time:
-                match_date = match.find_element(By.CLASS_NAME, 'ft').text
-
             home_team = match.find_element(By.ID, match.get_attribute('id') + '__home-team-name').text
             away_team = match.find_element(By.ID, match.get_attribute('id') + '__away-team-name').text
             home_score_element = match.find_element(By.ID, match.get_attribute('id') + '__home-team-score')
             away_score_element = match.find_element(By.ID, match.get_attribute('id') + '__away-team-score')
-            
+
             home_score = home_score_element.text if home_score_element.text else None
             away_score = away_score_element.text if away_score_element.text else None
             
@@ -48,26 +55,36 @@ def fetch_data(driver, url):
                 'home_team': home_team,
                 'away_team': away_team
             }
-            
+
             if match_time == 'FT':
                 match_info['status'] = 'Finished'
-                match_info['result'] = f"{home_team} {home_score} - {away_score} {away_team}"
+                match_info['result'] = f"{home_score} - {away_score}"
             elif "'" in match_time:
                 match_info['status'] = 'Live'
                 match_info['time'] = match_time
                 match_info['score'] = f"{home_score} - {away_score}"
             elif 'HT' in match_time:
                 match_info['status'] = 'Halftime'
-                match_info['score'] = f"{home_team} {home_score} - {away_team} {away_score}"
+                match_info['score'] = f"{home_score} - {away_score}"
             else:
-                match_info['status'] = f'Upcoming {match_date} {match_time}'
-                match_info['start_time'] = match_time
-            
+                try:
+                    match_date = match.find_element(By.CSS_SELECTOR, 'span.et.ft').text
+                    match_info['status'] = f'Upcoming {match_date}'
+                    match_info['start_time'] = match_time
+                except NoSuchElementException:
+                    match_info['status'] = f'DATE NOT FOUND'
+                    match_info['start_time'] = match_time
+            print(match_info)
             match_data.append(match_info)
+
+        except TimeoutException:
+            print(f"[bold red]Timeout while waiting for elements in match:[/bold red] {url}")
         except Exception as e:
+            print(url)
             print(f'Error extracting data for a match: {e}')
     
     return match_data
+
 
 def save_to_json(data, filename):
     """
